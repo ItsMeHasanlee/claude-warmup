@@ -6,7 +6,7 @@
 
 *One tiny scheduled ping. Your usage window resets on a clock **you** choose — not whenever you happened to start.*
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [Security](#security) · [Responsible use](#compliance--responsible-use)
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Configuration](#configuration) · [Security](#security) · [Responsible use](#compliance--responsible-use)
 
 </div>
 
@@ -28,7 +28,7 @@ That honesty *is* the product. Most "limit" hacks promise to beat the system. Wa
 | | **WarmWindow** | Typical warmup scripts |
 |---|---|---|
 | Promise | Predictable resets, stated plainly | "Beat the limit / unlock hours" |
-| Schedule | **24/7 cadence** for any work rhythm | Usually a one-shot "before 9-to-5" |
+| Schedule | **Your choice** — 24/7 cadence *or* workday-anchored | Usually one fixed mode |
 | Footprint | Leanest possible ping — Haiku, no session persisted | Often heavier prompts |
 | Infra | Pure GitHub Actions — no servers, **$0** | Sometimes an external host |
 | Security | Read-only token scope, no PR triggers, encrypted secret | Varies |
@@ -37,13 +37,13 @@ That honesty *is* the product. Most "limit" hacks promise to beat the system. Wa
 ## How it works
 
 ```
-GitHub Actions (cron, every 6h)
+GitHub Actions (your schedule)
         |
         v
   ephemeral runner  ->  installs the Claude Code CLI
         |
         v
-  claude -p "hi" --model haiku --no-session-persistence
+  claude -p "hello world!" --model haiku --no-session-persistence
         |   (authenticates with YOUR OAuth token, stored as an encrypted secret)
         v
   your 5-hour window opens at a predictable time  ->  runner is destroyed
@@ -62,22 +62,48 @@ Nothing is stored. The runner is wiped after each run, so there is no chat histo
 3. **Add the token as a secret:** `Settings -> Secrets and variables -> Actions -> New repository secret`
    - **Name:** `CLAUDE_CODE_OAUTH_TOKEN`
    - **Value:** the token from step 1
-4. **Pick your times:** edit the `cron` line in `.github/workflows/warmup.yml` (times are UTC).
+4. **Pick your schedule:** edit the `cron` line in `.github/workflows/warmup.yml` (see [Configuration](#configuration) — times are UTC).
 5. **Test:** `Actions -> WarmWindow -> Run workflow`. A green check means you're done.
 
 ## Configuration
 
-The default schedule runs every 6 hours — `00:00, 06:00, 12:00, 18:00 UTC`:
+GitHub Actions cron runs in **UTC only** (there is no timezone field), so you convert from your local time. Pick whichever mode fits how you work.
+
+### Mode A — Predictable all day (default)
+
+A ping every 6 hours, around the clock. Best if your hours are irregular or you just want resets you can rely on at any time.
 
 ```yaml
 on:
   schedule:
-    - cron: '0 0,6,12,18 * * *'
+    - cron: '0 0,6,12,18 * * *'   # 00:00 06:00 12:00 18:00 UTC
 ```
 
-**Why 6 hours and not 5?** A ~1-hour buffer absorbs GitHub's cron jitter, so every ping reliably lands in a *fresh* window. 6 divides 24 evenly, so the schedule never drifts. Prefer a single daily warmup before your day starts? Just set one time a few hours before you begin.
+**Why 6 hours, not the 5-hour window length?** The extra hour is a deliberate **buffer** — it guarantees each ping lands *after* the previous window expired, so you always start a clean one. And 6 divides 24 evenly (4 equal slots a day), so the schedule stays locked to the same clock times forever, with **no drift**.
 
-> **Tip:** check your current window any time with `/usage` inside Claude Code.
+### Mode B — Anchored to your workday (great for 9-to-5)
+
+One warmup a few hours before you start, so your window resets *into* your morning instead of at a random time. The window is **5 hours**, so:
+
+> **reset time = warmup time + 5 hours**
+
+Want to arrive at 09:00 and see *"resets in 2h"* (a fresh window at 11:00)? Warm up at **06:00 local** — `06:00 + 5h = 11:00`. You walk in on a nearly-full window that refreshes at 11:00, then your own work rolls the next window into the afternoon.
+
+Convert your local warmup time to UTC for the cron:
+
+| You start work | Warm up (local) | Timezone | cron (UTC) |
+|---|---|---|---|
+| 09:00 | 06:00 | London (UTC+0) | `0 6 * * 1-5` |
+| 09:00 | 06:00 | New York (UTC-5) | `0 11 * * 1-5` |
+| 09:00 | 06:00 | Baku (UTC+4) | `0 2 * * 1-5` |
+
+> Rule of thumb: `UTC = local - your_offset`. The `1-5` means Monday-Friday (drop it for every day).
+
+### Heads-up: GitHub cron is best-effort
+
+Scheduled runs on GitHub (like free cron anywhere) usually fire a few minutes late and, under heavy load, can occasionally be **delayed 10-30 min or skipped**. Both modes are built around this: Mode A's 6-hour buffer and Mode B's 3-hour head start absorb the slippage, so a late ping still lands where you need it.
+
+> **Tip:** check your current window any time with `/usage` in Claude Code, or at claude.ai/settings/usage.
 
 ## Security
 
@@ -106,6 +132,10 @@ WarmWindow is designed to be used **honestly and within the rules**:
 **Does it cost anything?** No servers and no API billing — it runs on free GitHub Actions, and the single Haiku ping sits inside your existing subscription.
 
 **Is my token safe in a public repo?** Yes. Secrets are encrypted and never stored in files. See [Security](#security).
+
+## Credits
+
+WarmWindow builds on a warmup technique the Claude developer community has explored in several open-source projects. Its focus is a clean, honest, security-first take: minimal footprint, transparent about what it does and doesn't do, and easy to align to your own schedule and timezone.
 
 ## Disclaimer
 
