@@ -1,13 +1,15 @@
-name: Claude Warmup
+name: WarmWindow
 
 on:
   schedule:
-    # UTC. Hər 6 saat: Bakıda 04:00, 10:00, 16:00, 22:00
+    # Times are UTC. Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC.
+    # The ~1h buffer over the 5h window absorbs cron jitter, so every ping
+    # reliably lands in a fresh window. 6 divides 24 evenly -> no drift.
     - cron: '0 0,6,12,18 * * *'
   workflow_dispatch:
 
 concurrency:
-  group: claude-warmup
+  group: warmwindow
   cancel-in-progress: false
 
 jobs:
@@ -15,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Claude Code qur
+      - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
-      - name: Warmup promptu göndər
+      - name: Send warmup ping
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: claude -p "."
+        run: claude -p "hello world!" --model haiku --no-session-persistence
