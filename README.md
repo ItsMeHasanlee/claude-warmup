@@ -6,11 +6,19 @@
 
 *One tiny scheduled ping. Your usage window resets on a clock **you** choose — not whenever you happened to start.*
 
+[![Warmup](https://github.com/ItsMeHasanlee/claude-warmup/actions/workflows/warmup.yml/badge.svg)](https://github.com/ItsMeHasanlee/claude-warmup/actions/workflows/warmup.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Cost $0](https://img.shields.io/badge/cost-%240-brightgreen)
+
 [Quick start](#quick-start) · [How it works](#how-it-works) · [Configuration](#configuration) · [Security](#security) · [Responsible use](#compliance--responsible-use)
 
 </div>
 
 ---
+
+> **In one sentence:** WarmWindow is a free GitHub Action that sends Claude one tiny "hello" on a schedule you set — so your 5-hour usage limit always resets at a time you can count on. No servers, no extra cost, no magic.
+
+**Who's it for?** Anyone on Claude Pro/Max who's tired of their usage window resetting at random times — students, indie hackers, and 9-to-5 engineers alike.
 
 ## What it is (and what it isn't)
 
@@ -40,7 +48,7 @@ That honesty *is* the product. Most "limit" hacks promise to beat the system. Wa
 GitHub Actions (your schedule)
         |
         v
-  ephemeral runner  ->  installs the Claude Code CLI
+  throwaway runner  ->  installs the Claude Code CLI
         |
         v
   claude -p "hello world!" --model haiku --no-session-persistence
@@ -99,6 +107,10 @@ Convert your local warmup time to UTC for the cron:
 
 > Rule of thumb: `UTC = local - your_offset`. The `1-5` means Monday-Friday (drop it for every day).
 
+> Daylight saving shifts these: in summer **London** is UTC+1 (`0 5 * * 1-5`) and **New York** is UTC-4 (`0 10 * * 1-5`). **Baku** stays UTC+4 all year.
+
+**Cover the afternoon too:** add a second ping six hours after the first to keep the cadence. For example, Baku `0 2,8 * * 1-5` warms 06:00 *and* 12:00 local, so fresh windows land at 11:00 and 17:00 — no need to lean on your own activity after lunch.
+
 ### Heads-up: GitHub cron is best-effort
 
 Scheduled runs on GitHub (like free cron anywhere) usually fire a few minutes late and, under heavy load, can occasionally be **delayed 10-30 min or skipped**. Both modes are built around this: Mode A's 6-hour buffer and Mode B's 3-hour head start absorb the slippage, so a late ping still lands where you need it.
@@ -127,11 +139,15 @@ WarmWindow is designed to be used **honestly and within the rules**:
 
 **Does this get me more usage?** No. Same limits — just predictable reset times.
 
-**Will it clutter my chat history?** No. Runs are headless on a throwaway runner and never appear in claude.ai.
+**Will it clutter my chat history?** No. Each run happens quietly in the background on a throwaway machine — it never opens a real chat, so nothing shows up in claude.ai.
 
 **Does it cost anything?** No servers and no API billing — it runs on free GitHub Actions, and the single Haiku ping sits inside your existing subscription.
 
 **Is my token safe in a public repo?** Yes. Secrets are encrypted and never stored in files. See [Security](#security).
+
+## Contributing
+
+WarmWindow is deliberately tiny — basically one workflow file. If you can make it clearer or safer (a better doc, a new timezone recipe, a smarter default), open an issue or a pull request. To use it yourself, just hit **Use this template** and adapt it to your own routine.
 
 ## Credits
 
