@@ -1,0 +1,24 @@
+name: Claude Warmup
+
+on:
+  schedule:
+    # UTC. Hər 6 saat: Bakıda 04:00, 10:00, 16:00, 22:00
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: claude-warmup
+  cancel-in-progress: false
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Claude Code qur
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Warmup promptu göndər
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: claude -p "."
