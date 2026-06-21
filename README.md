@@ -29,8 +29,6 @@ Claude Pro/Max usage runs on a rolling **5-hour window**: it starts the moment y
 > **The honest part. Read this first.**
 > WarmWindow does **not** give you extra usage, raise your limits, or bypass anything. It only makes your reset times **predictable**. One ping per window is all it takes; more would simply be waste. If you're looking for "more quota," this isn't that tool, and no honest tool is.
 
-That honesty *is* the product. Most "limit" hacks promise to beat the system. WarmWindow promises one thing and does it cleanly: **predictability you can build a routine around.**
-
 ## Why it's different
 
 | | **WarmWindow** | Typical warmup scripts |
@@ -95,7 +93,7 @@ One warmup a few hours before you start, so your window resets *into* your morni
 
 > **reset time = warmup time + 5 hours**
 
-Want to arrive at 09:00 and see *"resets in 2h"* (a fresh window at 11:00)? Warm up at **06:00 local**, because `06:00 + 5h = 11:00`. You walk in on a nearly-full window that refreshes at 11:00, then your own work rolls the next window into the afternoon.
+Want to arrive at 09:00 and have your window refresh at 11:00? Warm up at **06:00 local** (`06:00 + 5h = 11:00`). You start on a nearly-full window, and your own work rolls the next one into the afternoon.
 
 Convert your local warmup time to UTC for the cron:
 
@@ -109,11 +107,11 @@ Convert your local warmup time to UTC for the cron:
 
 > Daylight saving shifts these: in summer **London** is UTC+1 (`0 5 * * 1-5`) and **New York** is UTC-4 (`0 10 * * 1-5`). **Baku** stays UTC+4 all year.
 
-**Cover the afternoon too:** add a second ping six hours after the first to keep the cadence. For example, Baku `0 2,8 * * 1-5` warms 06:00 *and* 12:00 local, so fresh windows land at 11:00 and 17:00, with no need to lean on your own activity after lunch.
+**Cover the afternoon too:** add a second ping six hours later. Baku `0 2,8 * * 1-5` warms 06:00 and 12:00 local, so fresh windows land at 11:00 and 17:00.
 
 ### Heads-up: GitHub cron is best-effort
 
-Scheduled runs on GitHub (like free cron anywhere) usually fire a few minutes late and, under heavy load, can occasionally be **delayed 10 to 30 minutes or skipped**. Both modes are built around this: Mode A's 6-hour buffer and Mode B's 3-hour head start absorb the slippage, so a late ping still lands where you need it.
+GitHub's scheduled runs usually fire a few minutes late and, under heavy load, can be **delayed 10 to 30 minutes or skipped**. Both modes absorb this: Mode A's 6-hour buffer and Mode B's 3-hour head start mean a late ping still lands where you need it.
 
 > **Tip:** check your current window any time with `/usage` in Claude Code, or at claude.ai/settings/usage.
 
@@ -151,7 +149,7 @@ WarmWindow is deliberately tiny: basically one workflow file. If you can make it
 
 ## Credits
 
-WarmWindow builds on a warmup technique the Claude developer community has explored in several open-source projects. Its focus is a clean, honest, security-first take: minimal footprint, transparent about what it does and doesn't do, and easy to align to your own schedule and timezone.
+WarmWindow builds on a warmup technique the Claude developer community has explored in several open-source projects, with a focus on staying clean, honest, and security-first.
 
 ## Disclaimer
 
