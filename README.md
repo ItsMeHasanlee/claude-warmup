@@ -115,6 +115,8 @@ GitHub's scheduled runs usually fire a few minutes late and, under heavy load, c
 
 > **Tip:** check your current window any time with `/usage` in Claude Code, or at claude.ai/settings/usage.
 
+> **Why so simple?** WarmWindow is intentionally stateless: no usage polling, no adaptive retries. See [DESIGN.md](DESIGN.md) for why a fixed schedule beats a "smarter" one, even when a ping lands at an awkward moment.
+
 ## Security
 
 - Your token lives in an **encrypted GitHub Actions secret**: never in the code, never in git history.
