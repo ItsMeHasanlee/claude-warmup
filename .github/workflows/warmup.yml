@@ -12,15 +12,32 @@ concurrency:
   group: warmwindow
   cancel-in-progress: false
 
+permissions:
+  actions: write
+
 jobs:
   warmup:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          # The npm package fetches a native binary in postinstall; that
+          # download sometimes fails silently, so retry it once explicitly.
+          claude --version || node "$(npm root -g)/@anthropic-ai/claude-code/install.cjs"
+          claude --version
 
       - name: Send warmup ping
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: claude -p "hello world!" --model haiku --no-session-persistence
+
+      # GitHub disables scheduled workflows after 60 days without repository
+      # activity. Re-enabling through the API on every run resets that clock,
+      # so the schedule keeps running without dummy commits.
+      - name: Keep schedule alive
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/warmup.yml/enable"
